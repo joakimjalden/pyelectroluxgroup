@@ -37,6 +37,16 @@ async def main():
 
     _list_parser = subparsers.add_parser("list")
 
+    interactive_maps_parser = subparsers.add_parser("interactive_maps")
+    interactive_maps_parser.add_argument(
+        "-d", dest="appliance_id", help="ID of the target device", required=True
+    )
+
+    memory_maps_parser = subparsers.add_parser("memory_maps")
+    memory_maps_parser.add_argument(
+        "-d", dest="appliance_id", help="ID of the target device", required=True
+    )
+
     command_parser = subparsers.add_parser("command")
     command_parser.add_argument(
         "-d", dest="appliance_id", help="ID of the target device", required=True
@@ -83,6 +93,46 @@ async def main():
                 print(" -- State --")
                 for k, v in appliance.state.items():
                     print(f" ---- {k}: {v}")
+
+        if args.cmd == "interactive_maps":
+            try:
+                appliance = next(
+                    filter(lambda x: x.id == args.appliance_id, appliances)
+                )
+
+                maps = await appliance.async_get_interactive_maps()
+
+                for map in maps:
+                    print(f"Map ID: {map.id}")
+                    print(f"Map name: {map.name}")
+                    print(f"Zones:")
+                    for zone in map.zones:
+                        print(f"  - Zone ID: {zone.id}")
+                        print(f"    Name: {zone.name}")
+                        print(f"    Type: {zone.type}")
+                        print(f"    Power Mode: {zone.power_mode}")
+
+            except StopIteration:
+                print(f"Appliance with ID {args.appliance_id} was not found")        
+
+        if args.cmd == "memory_maps":
+            try:
+                appliance = next(
+                    filter(lambda x: x.id == args.appliance_id, appliances)
+                )
+
+                maps = await appliance.async_get_memory_maps()
+
+                for map in maps:
+                    print(f"Map ID: {map.id}")
+                    print(f"Map name: {map.name}")
+                    print(f"Zones:")
+                    for room in map.rooms:
+                        print(f"  - Room ID: {room.id}")
+                        print(f"    Name: {room.name}")
+
+            except StopIteration:
+                print(f"Appliance with ID {args.appliance_id} was not found") 
 
         if args.cmd == "command":
             try:
