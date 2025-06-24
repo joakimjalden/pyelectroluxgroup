@@ -1,9 +1,10 @@
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from aiohttp.client_exceptions import ClientResponseError
 
 from pyelectroluxgroup.auth import Auth
+from pyelectroluxgroup.map import InteractiveMap, MemoryMap
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,3 +108,15 @@ class Appliance:
         _LOGGER.debug(f"Appliance info {self.info_data}")
         _LOGGER.debug(f"Appliance state {self.state_data}")
         _LOGGER.debug(f"Appliance capabilities {self.capabilities_data}")
+
+    async def async_get_interactive_maps(self) -> List[InteractiveMap]:
+        """Return the interactive maps for the Pure i8 and Pure i9 RVC appliances."""
+        resp = await self.auth.request("get", f"appliances/{self.id}/interactiveMap")
+        resp.raise_for_status()
+        return [InteractiveMap(map_data) for map_data in await resp.json()]
+
+    async def async_get_memory_maps(self) -> List[MemoryMap]:
+        """Return the memory maps for the 700 series RVC appliances."""
+        resp = await self.auth.request("get", f"appliances/{self.id}/memoryMap")
+        resp.raise_for_status()
+        return [MemoryMap(map_data) for map_data in await resp.json()]
