@@ -3,7 +3,6 @@ from typing import Any, Dict, List
 
 from aiohttp.client_exceptions import ClientResponseError
 
-import pyelectroluxgroup
 from pyelectroluxgroup.auth import Auth
 from pyelectroluxgroup.map import InteractiveMap, MemoryMap
 
@@ -114,14 +113,10 @@ class Appliance:
         """Return the interactive maps for the Pure i8 and Pure i9 RVC appliances."""
         resp = await self.auth.request("get", f"appliances/{self.id}/interactiveMap")
         resp.raise_for_status()
-        return [
-            InteractiveMap(map_data) for map_data in await resp.json()
-        ]
-    
+        return [InteractiveMap(map_data) for map_data in await resp.json()]
+
     async def async_get_memory_maps(self) -> List[MemoryMap]:
         """Return the memory maps for the 700 series RVC appliances."""
         resp = await self.auth.request("get", f"appliances/{self.id}/memoryMap")
         resp.raise_for_status()
-        return [
-            MemoryMap(map_data) for map_data in await resp.json()
-        ]
+        return [MemoryMap(map_data) for map_data in await resp.json()]

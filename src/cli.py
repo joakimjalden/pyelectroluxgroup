@@ -105,7 +105,7 @@ async def main():
                 for map in maps:
                     print(f"Map ID: {map.id}")
                     print(f"Map name: {map.name}")
-                    print(f"Zones:")
+                    print("Zones:")
                     for zone in map.zones:
                         print(f"  - Zone ID: {zone.id}")
                         print(f"    Name: {zone.name}")
@@ -113,7 +113,7 @@ async def main():
                         print(f"    Power Mode: {zone.power_mode}")
 
             except StopIteration:
-                print(f"Appliance with ID {args.appliance_id} was not found")        
+                print(f"Appliance with ID {args.appliance_id} was not found")
 
         if args.cmd == "memory_maps":
             try:
@@ -126,13 +126,13 @@ async def main():
                 for map in maps:
                     print(f"Map ID: {map.id}")
                     print(f"Map name: {map.name}")
-                    print(f"Zones:")
+                    print("Zones:")
                     for room in map.rooms:
                         print(f"  - Room ID: {room.id}")
                         print(f"    Name: {room.name}")
 
             except StopIteration:
-                print(f"Appliance with ID {args.appliance_id} was not found") 
+                print(f"Appliance with ID {args.appliance_id} was not found")
 
         if args.cmd == "command":
             try:
