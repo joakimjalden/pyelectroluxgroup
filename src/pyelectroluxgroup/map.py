@@ -73,7 +73,7 @@ class InteractiveMap(Map):
     def __init__(self, data: Dict[str, Any]):
         """Initialize the interactive map with data."""
         super().__init__(data)
-        self.zones: list[Area] = [Zone(zone) for zone in data["zones"]]
+        self.zones: list[Area] = [Zone(zone) for zone in data.get("zones") or []]
 
     @property
     def areas(self) -> list[Area]:
@@ -86,7 +86,7 @@ class MemoryMap(Map):
     def __init__(self, data: Dict[str, Any]):
         """Initialize the memory map with data."""
         super().__init__(data)
-        self.rooms = [Room(room) for room in data["rooms"]]
+        self.rooms: list[Area] = [Room(room) for room in data.get("rooms") or []]
 
     @property
     def areas(self) -> list[Area]:
