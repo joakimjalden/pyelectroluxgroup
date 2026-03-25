@@ -134,3 +134,93 @@ async def test_async_get_appliance():
             assert appliance.id == appliance_id
             assert appliance.name == "My Air Conditioner"
             assert appliance.type == "AC"
+
+
+@pytest.mark.asyncio
+async def test_watch_appliances(monkeypatch):
+    from unittest.mock import MagicMock
+
+    token_manager = MockTokenManager(
+        api_key="mock_api_key",
+        access_token="valid_access_token",
+        refresh_token="mock_refresh_token",
+    )
+
+    # Mock the aiohttp_sse_client EventSource class
+    mock_event1 = MagicMock()
+    mock_event1.data = '{"applianceId": "123", "property": "Fanspeed", "value": 3}'
+    mock_event2 = MagicMock()
+    mock_event2.data = '{"applianceId": "123", "property": "Workmode", "value": "Auto"}'
+
+    mock_event_source_instance = MagicMock()
+
+    class MockAsyncIterator:
+        def __init__(self, seq):
+            self.iter = iter(seq)
+
+        def __iter__(self):
+            return self.iter
+
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            try:
+                return next(self.iter)
+            except StopIteration:
+                raise StopAsyncIteration
+
+    # Using simple async generator to mock the iterator
+    class BreakLoopException(Exception):
+        pass
+
+    class MockEventSource:
+        async def __aiter__(self):
+            yield mock_event1
+            yield mock_event2
+            raise BreakLoopException()
+
+    mock_event_source_instance = MockEventSource()
+
+    class AsyncContextManagerMock:
+        async def __aenter__(self):
+            return mock_event_source_instance
+
+        async def __aexit__(self, exc_type, exc, tb):
+            pass
+
+    mock_event_source = MagicMock(return_value=AsyncContextManagerMock())
+
+    monkeypatch.setattr("pyelectroluxgroup.api.EventSource", mock_event_source)
+
+    async with ClientSession() as session:
+        hub_api = ElectroluxHubAPI(session, token_manager)
+
+        with aioresponses() as mocked:
+            livestream_url = (
+                "https://api.developer.electrolux.one/api/v1/configurations/livestream"
+            )
+            mocked.get(
+                livestream_url,
+                payload={"url": "https://livestream.developer.electrolux.one/stream"},
+            )
+
+            # Call the method and collect the results
+            events = []
+            try:
+                async for event in hub_api.watch_appliances():
+                    events.append(event)
+            except BreakLoopException:
+                pass
+
+            assert len(events) == 2
+            assert events[0] == {
+                "applianceId": "123",
+                "property": "Fanspeed",
+                "value": 3,
+            }
+            assert events[1] == {
+                "applianceId": "123",
+                "property": "Workmode",
+                "value": "Auto",
+            }
